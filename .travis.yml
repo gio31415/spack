@@ -19,6 +19,11 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=flake8
+    - stage: 'no changes in core'
+      python: '2.7'
+      os: linux
+      language: python
+      env: TEST_SUITE=nochangesincore
     - stage: 'unit tests + documentation'
       python: '2.6'
       os: linux
@@ -96,8 +101,12 @@ jobs:
 
 stages:
   - 'style checks'
-  - 'unit tests + documentation'
-  - 'build tests'
+  - name: 'no changes in core'
+    if: head_branch =~ ^packages
+  - name: 'unit tests + documentation'
+    if: NOT head_branch =~ ^packages
+  - name: 'build tests'
+    if: NOT head_branch =~ ^packages
   - name: 'unit tests - osx'
     if: type IN (cron)
 
