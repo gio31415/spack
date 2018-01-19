@@ -38,6 +38,7 @@ def check_db():
         spack.repo.get(name)
 
 
+@pytest.mark.packagetest
 @pytest.mark.maybeslow
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
@@ -51,6 +52,7 @@ def test_get_all_mock_packages():
         check_db()
 
 
+@pytest.mark.packagetest
 def test_all_versions_are_lowercase():
     """Spack package names must be lowercase, and use `-` instead of `_`."""
     errors = []
