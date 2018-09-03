@@ -61,10 +61,12 @@ def test_static_to_shared_library(build_environment):
 
     expected = {
         'linux': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
+                  ' -Wl,--disable-new-dtags'
                   ' -Wl,-rpath,/spack-test-prefix/lib64 -shared'
                   ' -Wl,-soname,{2} -Wl,--whole-archive {0}'
                   ' -Wl,--no-whole-archive -o {1}'),
         'darwin': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
+                   ' -Wl,--disable-new-dtags'
                    ' -Wl,-rpath,/spack-test-prefix/lib64 -dynamiclib'
                    ' -install_name {1} -Wl,-force_load,{0} -o {1}')
     }
