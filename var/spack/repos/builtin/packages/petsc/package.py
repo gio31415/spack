@@ -35,14 +35,17 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
+    url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
+    git      = "https://bitbucket.org/petsc/petsc.git"
 
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    version('develop', git='https://bitbucket.org/petsc/petsc.git', tag='master')
-    version('xsdk-0.2.0', git='https://bitbucket.org/petsc/petsc.git', tag='xsdk-0.2.0')
+    version('develop', branch='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.9.3', '7b71d705f66f9961cb0e2da3f9da79a1')
     version('3.9.2', '8bedc0cd8c8603d54bfd99a6e8f77b3d')
+    version('3.9.1', 'd3a229a188dbeef9b3f29b9a63622fad')
     version('3.9.0', '34b8a81814ca050a96d58e53a2f0ac7a')
     version('3.8.4', 'd7767fe2919536aa393eb22841899306')
     version('3.8.3', '322cbcf2a0f7b7bad562643b05d66f11')
@@ -73,7 +76,6 @@ class Petsc(Package):
             description='Activates support for metis and parmetis')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
-    variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     # Mumps is disabled by default, because it depends on Scalapack
@@ -118,7 +120,6 @@ class Petsc(Package):
     depends_on('python@2.6:2.8', type='build')
 
     # Other dependencies
-    depends_on('boost', when='+boost')
     depends_on('metis@5:~int64+real64', when='@:3.7.99+metis~int64+double')
     depends_on('metis@5:~int64', when='@:3.7.99+metis~int64~double')
     depends_on('metis@5:+int64+real64', when='@:3.7.99+metis+int64+double')
@@ -146,8 +147,8 @@ class Petsc(Package):
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.8.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.8.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -185,8 +186,21 @@ class Petsc(Package):
             compiler_opts = [
                 '--with-cc=%s' % self.spec['mpi'].mpicc,
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
-                '--with-fc=%s' % self.spec['mpi'].mpifc
+                '--with-fc=%s' % self.spec['mpi'].mpifc,
+                #'--with-fortranlib-autodetect=no',
             ]
+            if self.spec.satisfies('%intel'):
+                # "Inspired" by what is done in the elemental package
+                # ifort doesn't automatically link all run-time libraries
+                ifort = env['SPACK_F77']
+                intel_bin = os.path.dirname(ifort)
+                intel_lib_root = os.path.join(intel_bin, '..', '..', 'compiler', 'lib')
+                libfortran = find_libraries([
+                    'libifport', 'libifcoremt', 'libimf', 'libsvml',
+                    'libipgo', 'libintlc', 'libpthread'
+                    ], root=intel_lib_root, recursive=True)
+                compiler_opts.append('--FC_LINKER_FLAGS={0}'.format(libfortran.ld_flags))
+
         return compiler_opts
 
     def install(self, spec, prefix):
@@ -194,7 +208,11 @@ class Petsc(Package):
                    '--with-x=0',
                    '--download-c2html=0',
                    '--download-sowing=0',
-                   '--download-hwloc=0']
+                   '--download-hwloc=0',
+                   'COPTFLAGS=',
+                   'FOPTFLAGS=',
+                   'CXXOPTFLAGS=']
+
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % (
@@ -214,14 +232,17 @@ class Petsc(Package):
 
         if 'trilinos' in spec:
             options.append('--with-cxx-dialect=C++11')
+            if spec.satisfies('^trilinos+boost'):
+                options.append('--with-boost=1')
 
         if self.spec.satisfies('clanguage=C++'):
             options.append('--with-clanguage=C++')
         else:
             options.append('--with-clanguage=C')
 
-        # Help PETSc pick up Scalapack from MKL:
-        if 'scalapack' in spec:
+        # Help PETSc pick up Scalapack from MKL
+        # 'satisfies' is used to not pick up scalapack when not needed
+        if spec.satisfies('+mumps+mpi~int64'):
             scalapack = spec['scalapack'].libs
             options.extend([
                 '--with-scalapack-lib=%s' % scalapack.joined(),
@@ -233,7 +254,7 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
+        for library in ('metis', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'trilinos'):
             options.append(
                 '--with-{library}={value}'.format(
@@ -297,6 +318,18 @@ class Petsc(Package):
                 cc('ex50.c', '-I%s' % prefix.include, '-L%s' % prefix.lib,
                    '-lpetsc', '-lm', '-o', 'ex50')
                 run = Executable(join_path(spec['mpi'].prefix.bin, 'mpirun'))
+                # For Spectrum MPI, if -np is omitted, the default behavior is
+                # to assign one process per process slot, where the default
+                # process slot allocation is one per core. On systems with
+                # many cores, the number of processes can exceed the size of
+                # the grid specified when the testcase is run and the test case
+                # fails. Specify a small number of processes to prevent
+                # failure.
+                # For more information about Spectrum MPI invocation, see URL
+                # https://www.ibm.com/support/knowledgecenter/en/SSZTET_10.1.0/smpi02/smpi02_mpirun_options.html
+                if ('spectrum-mpi' in spec):
+                    run.add_default_arg('-np')
+                    run.add_default_arg('4')
                 run('ex50', '-da_grid_x', '4', '-da_grid_y', '4')
                 if 'superlu-dist' in spec:
                     run('ex50',
