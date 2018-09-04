@@ -194,6 +194,8 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+    env.set('SPACK_LINKER_ARG', compiler.linker_arg)
+    env.set('SPACK_DISABLE_NEW_DTAGS', compiler.disable_new_dtags)
 
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.

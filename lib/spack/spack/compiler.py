@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 import re
 import itertools
 
@@ -109,6 +110,18 @@ class Compiler(object):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
+
+    @property
+    def linker_arg(self):
+        """Flag that need to be used to pass an argument to the linker."""
+        return '-Wl,'
+
+    @property
+    def disable_new_dtags(self):
+        if platform.platform().lower() == 'macos':
+            return ''
+        return '--disable-new-dtags'
+
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler
