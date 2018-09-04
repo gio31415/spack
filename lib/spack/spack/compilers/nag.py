@@ -52,6 +52,10 @@ class Nag(Compiler):
     def fc_rpath_arg(self):
         return '-Wl,-Wl,,-rpath,,'
 
+    @property
+    def linker_arg(self):
+        return '-Wl,-Wl,,'
+
     @classmethod
     def default_version(cls, comp):
         """The ``-V`` option works for nag compilers.
