@@ -6,12 +6,12 @@
 import argparse
 
 import llnl.util.tty as tty
-
-import spack.cmd
-import spack.repo
-import spack.store
-import spack.spec
 import spack.binary_distribution as bindist
+import spack.cmd
+import spack.relocate
+import spack.repo
+import spack.spec
+import spack.store
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -80,8 +80,18 @@ def setup_parser(subparser):
                         help="force new download of keys")
     dlkeys.set_defaults(func=getkeys)
 
+    preview_parser = subparsers.add_parser(
+        'preview',
+        help='analyzes an installed spec and reports whether '
+             'executables and libraries are relocatable'
+    )
+    preview_parser.add_argument(
+        'packages', nargs='+', help='list of installed packages'
+    )
+    preview_parser.set_defaults(func=preview)
 
-def find_matching_specs(pkgs, allow_multiple_matches=False, force=False):
+
+def find_matching_specs(pkgs, allow_multiple_matches=False):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -179,7 +189,7 @@ def createtarball(args):
     if args.key:
         signkey = args.key
 
-    matches = find_matching_specs(pkgs, False, False)
+    matches = find_matching_specs(pkgs, False)
     for match in matches:
         if match.external or match.virtual:
             tty.msg('skipping external or virtual spec %s' %
@@ -268,6 +278,22 @@ def listspecs(args):
 def getkeys(args):
     """get public keys available on mirrors"""
     bindist.get_keys(args.install, args.trust, args.force)
+
+
+def preview(args):
+    """Print a status tree of the selected specs that shows which nodes are
+    relocatable and which might not be.
+
+    Args:
+        args: command line arguments
+    """
+    specs = find_matching_specs(args.packages, allow_multiple_matches=True)
+
+    # Cycle over the specs that match
+    for spec in specs:
+        print("Relocatable nodes")
+        print("--------------------------------")
+        print(spec.tree(status_fn=spack.relocate.is_relocatable))
 
 
 def buildcache(parser, args):
