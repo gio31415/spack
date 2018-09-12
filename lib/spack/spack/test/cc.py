@@ -111,7 +111,8 @@ def wrapper_environment():
             SPACK_F77_RPATH_ARG='-Wl,-rpath,',
             SPACK_FC_RPATH_ARG='-Wl,-rpath,',
             SPACK_LINKER_ARG='-Wl,',
-            SPACK_DISABLE_NEW_DTAGS='--disable-new-dtags',
+            SPACK_DTAGS_TO_ENABLE='--disable-new-dtags',
+            SPACK_DTAGS_TO_DISABLE='--enable-new-dtags',
             SPACK_DEPENDENCIES=None):
         yield
 
