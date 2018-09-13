@@ -33,7 +33,6 @@ parameters=(
     SPACK_CXX_RPATH_ARG
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
-    SPACK_DTAGS_TO_ENABLE
     SPACK_DTAGS_TO_DISABLE
     SPACK_LINKER_ARG
     SPACK_SHORT_SPEC
@@ -175,10 +174,6 @@ fi
 # This is needed to ensure we set RPATH instead of RUNPATH
 # (or the opposite, depending on the configuration in config.yaml)
 #
-# Documentation on this mechanism is lacking at best. A few sources
-# of information are (note that some of them take explicitly the
-# opposite stance that Spack does):
-#
 # http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
 # https://wiki.debian.org/RpathIssue
 #
@@ -187,7 +182,6 @@ fi
 #
 # https://sourceware.org/ml/binutils/2013-01/msg00307.html
 #
-dtags_to_enable="${SPACK_DTAGS_TO_ENABLE}"
 dtags_to_disable="${SPACK_DTAGS_TO_DISABLE}"
 linker_arg="${SPACK_LINKER_ARG}"
 
@@ -409,7 +403,10 @@ esac
 
 # Linker flags
 case "$mode" in
-    ld|ccld)
+    ccld)
+        for flag in "${SPACK_LDFLAGS[@]}"; do flags+=("$linker_arg$flag"); done
+        ;;
+    ld)
         flags=("${flags[@]}" "${SPACK_LDFLAGS[@]}") ;;
 esac
 
@@ -498,12 +495,10 @@ for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 # RPATHs arguments
 case "$mode" in
     ccld)
-        if [ ! -z "$dtags_to_enable" ] ; then args+=("$linker_arg$dtags_to_enable") ; fi
         for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
         ;;
     ld)
-        if [ ! -z "$dtags_to_enable" ] ; then args+=("$dtags_to_enable") ; fi
         for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
         ;;

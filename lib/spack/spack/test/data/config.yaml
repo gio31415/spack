@@ -13,3 +13,4 @@ config:
   verify_ssl: true
   checksum: true
   dirty: True
+  shared_linking: 'rpath'

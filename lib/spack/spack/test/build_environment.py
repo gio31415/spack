@@ -40,7 +40,6 @@ def build_environment():
     os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
     os.environ['SPACK_LINKER_ARG'] = '-Wl,'
-    os.environ['SPACK_DTAGS_TO_ENABLE'] = '--disable-new-dtags'
     os.environ['SPACK_DTAGS_TO_DISABLE'] = '--enable-new-dtags'
 
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
@@ -64,12 +63,10 @@ def test_static_to_shared_library(build_environment):
 
     expected = {
         'linux': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
-                  ' -Wl,--disable-new-dtags'
                   ' -Wl,-rpath,/spack-test-prefix/lib64 -shared'
                   ' -Wl,-soname,{2} -Wl,--whole-archive {0}'
                   ' -Wl,--no-whole-archive -o {1}'),
         'darwin': ('/bin/mycc -Wl,-rpath,/spack-test-prefix/lib'
-                   ' -Wl,--disable-new-dtags'
                    ' -Wl,-rpath,/spack-test-prefix/lib64 -dynamiclib'
                    ' -install_name {1} -Wl,-force_load,{0} -o {1}')
     }

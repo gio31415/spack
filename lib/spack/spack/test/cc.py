@@ -111,7 +111,7 @@ def wrapper_environment():
             SPACK_F77_RPATH_ARG='-Wl,-rpath,',
             SPACK_FC_RPATH_ARG='-Wl,-rpath,',
             SPACK_LINKER_ARG='-Wl,',
-            SPACK_DTAGS_TO_ENABLE='--disable-new-dtags',
+            SPACK_LDFLAGS=None,  # Disable previous SPACK_LDFLAGS
             SPACK_DTAGS_TO_DISABLE='--enable-new-dtags',
             SPACK_DEPENDENCIES=None):
         yield
@@ -220,7 +220,6 @@ def test_ld_flags(wrapper_flags):
         spack_ldflags +
         test_include_paths +
         test_library_paths +
-        ['--disable-new-dtags'] +
         test_rpaths +
         pkg_rpaths +
         test_args_without_paths +
@@ -243,10 +242,9 @@ def test_cc_flags(wrapper_flags):
         [real_cc] +
         spack_cppflags +
         spack_cflags +
-        spack_ldflags +
+        ['-Wl,' + x for x in spack_ldflags] +
         test_include_paths +
         test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
         test_wl_rpaths +
         pkg_wl_rpaths +
         test_args_without_paths +
@@ -259,10 +257,9 @@ def test_cxx_flags(wrapper_flags):
         [real_cc] +
         spack_cppflags +
         spack_cxxflags +
-        spack_ldflags +
+        ['-Wl,' + x for x in spack_ldflags] +
         test_include_paths +
         test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
         test_wl_rpaths +
         pkg_wl_rpaths +
         test_args_without_paths +
@@ -275,10 +272,9 @@ def test_fc_flags(wrapper_flags):
         [real_cc] +
         spack_fflags +
         spack_cppflags +
-        spack_ldflags +
+        ['-Wl,' + x for x in spack_ldflags] +
         test_include_paths +
         test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
         test_wl_rpaths +
         pkg_wl_rpaths +
         test_args_without_paths +
@@ -292,7 +288,6 @@ def test_dep_rpath():
         [real_cc] +
         test_include_paths +
         test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
         test_wl_rpaths +
         pkg_wl_rpaths +
         test_args_without_paths)
@@ -309,7 +304,6 @@ def test_dep_include(dep4):
             test_include_paths +
             ['-I' + dep4 + '/include'] +
             test_library_paths +
-            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             pkg_wl_rpaths +
             test_args_without_paths)
@@ -326,7 +320,6 @@ def test_dep_lib(dep2):
             test_include_paths +
             test_library_paths +
             ['-L' + dep2 + '/lib64'] +
-            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             pkg_wl_rpaths +
             ['-Wl,-rpath,' + dep2 + '/lib64'] +
@@ -343,7 +336,6 @@ def test_dep_lib_no_rpath(dep2):
             test_include_paths +
             test_library_paths +
             ['-L' + dep2 + '/lib64'] +
-            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             pkg_wl_rpaths +
             test_args_without_paths)
@@ -358,7 +350,6 @@ def test_dep_lib_no_lib(dep2):
             [real_cc] +
             test_include_paths +
             test_library_paths +
-            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             pkg_wl_rpaths +
             ['-Wl,-rpath,' + dep2 + '/lib64'] +
@@ -382,7 +373,6 @@ def test_ccld_deps(dep1, dep2, dep3, dep4):
             ['-L' + dep1 + '/lib',
              '-L' + dep2 + '/lib64',
              '-L' + dep3 + '/lib64'] +
-            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             pkg_wl_rpaths +
             ['-Wl,-rpath,' + dep1 + '/lib',
@@ -436,7 +426,6 @@ def test_ccld_with_system_dirs(dep1, dep2, dep3, dep4):
              '-L' + dep3 + '/lib64'] +
             ['-L/usr/local/lib',
              '-L/lib64/'] +
-            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             pkg_wl_rpaths +
             ['-Wl,-rpath,' + dep1 + '/lib',
@@ -460,7 +449,6 @@ def test_ld_deps(dep1, dep2, dep3, dep4):
             ['-L' + dep1 + '/lib',
              '-L' + dep2 + '/lib64',
              '-L' + dep3 + '/lib64'] +
-            ['--disable-new-dtags'] +
             test_rpaths +
             pkg_rpaths +
             ['-rpath', dep1 + '/lib',
@@ -482,7 +470,6 @@ def test_ld_deps_no_rpath(dep1, dep2, dep3, dep4):
             ['-L' + dep1 + '/lib',
              '-L' + dep2 + '/lib64',
              '-L' + dep3 + '/lib64'] +
-            ['--disable-new-dtags'] +
             test_rpaths +
             pkg_rpaths +
             test_args_without_paths)
@@ -498,7 +485,6 @@ def test_ld_deps_no_link(dep1, dep2, dep3, dep4):
             ['ld'] +
             test_include_paths +
             test_library_paths +
-            ['--disable-new-dtags'] +
             test_rpaths +
             pkg_rpaths +
             ['-rpath', dep1 + '/lib',
@@ -523,7 +509,6 @@ def test_ld_deps_partial(dep1):
             test_include_paths +
             test_library_paths +
             ['-L' + dep1 + '/lib'] +
-            ['--disable-new-dtags'] +
             test_rpaths +
             pkg_rpaths +
             ['-rpath', dep1 + '/lib'] +
@@ -539,7 +524,6 @@ def test_ld_deps_partial(dep1):
             test_include_paths +
             test_library_paths +
             ['-L' + dep1 + '/lib'] +
-            ['--disable-new-dtags'] +
             test_rpaths +
             ['-r'] +
             test_args_without_paths)
@@ -553,7 +537,6 @@ def test_ccache_prepend_for_cc():
             [real_cc] +
             test_include_paths +
             test_library_paths +
-            ['-Wl,--disable-new-dtags'] +
             test_wl_rpaths +
             pkg_wl_rpaths +
             test_args_without_paths)
@@ -566,7 +549,6 @@ def test_no_ccache_prepend_for_fc():
         [real_cc] +
         test_include_paths +
         test_library_paths +
-        ['-Wl,--disable-new-dtags'] +
         test_wl_rpaths +
         pkg_wl_rpaths +
         test_args_without_paths)
@@ -574,7 +556,10 @@ def test_no_ccache_prepend_for_fc():
 
 @pytest.mark.regression('9160')
 def test_disable_new_dtags(wrapper_flags):
-    with set_env(SPACK_TEST_COMMAND='dump-args'):
+    with set_env(
+            SPACK_TEST_COMMAND='dump-args',
+            SPACK_LDFLAGS='--disable-new-dtags'
+    ):
         result = ld(*test_args, output=str).strip().split('\n')
         assert '--disable-new-dtags' in result
         result = cc(*test_args, output=str).strip().split('\n')

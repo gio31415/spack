@@ -199,10 +199,8 @@ def set_compiler_environment_variables(pkg, env):
     # Check whether we want to force RPATH or RUNPATH
     if spack.config.get('config:shared_linking') == 'rpath':
         env.set('SPACK_DTAGS_TO_DISABLE', compiler.enable_new_dtags)
-        env.set('SPACK_DTAGS_TO_ENABLE', compiler.disable_new_dtags)
     else:
         env.set('SPACK_DTAGS_TO_DISABLE', compiler.disable_new_dtags)
-        env.set('SPACK_DTAGS_TO_ENABLE', compiler.enable_new_dtags)
 
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
@@ -211,7 +209,7 @@ def set_compiler_environment_variables(pkg, env):
     build_system_flags = {}
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Always convert flag_handler to function type.
-        # This avoids discrepencies in calling conventions between functions
+        # This avoids discrepancies in calling conventions between functions
         # and methods, or between bound and unbound methods in python 2.
         # We cannot effectively convert everything to a bound method, which
         # would be the simpler solution.
@@ -226,6 +224,12 @@ def set_compiler_environment_variables(pkg, env):
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
+
+    # Inject flags to use either RPATH or RUNPATH for ELF binaries
+    if spack.config.get('config:shared_linking') == 'rpath':
+        inject_flags['ldflags'].append(compiler.disable_new_dtags)
+    else:
+        inject_flags['ldflags'].append(compiler.enable_new_dtags)
 
     # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():

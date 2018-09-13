@@ -146,7 +146,10 @@ class TestFlagHandlers(object):
         pkg.flag_handler = build_system_flags
         spack.build_environment.setup_package(pkg, False)
 
-        assert 'SPACK_LDFLAGS' not in os.environ
+        # SPACK_LDFLAGS is there because we inject
+        # flags for RPATH or RUNPATH
+        assert 'SPACK_LDFLAGS' in os.environ
+        assert os.environ['SPACK_LDFLAGS'] == '--disable-new-dtags'
         assert 'LDFLAGS' not in os.environ
 
         expected = set(['-DCMAKE_EXE_LINKER_FLAGS=-mthreads',
