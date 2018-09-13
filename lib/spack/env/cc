@@ -33,7 +33,6 @@ parameters=(
     SPACK_CXX_RPATH_ARG
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
-    SPACK_DTAGS_TO_DISABLE
     SPACK_LINKER_ARG
     SPACK_SHORT_SPEC
     SPACK_SYSTEM_DIRS
@@ -44,6 +43,8 @@ parameters=(
 # The default compiler flags are passed from these variables:
 #   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
 #   SPACK_LDFLAGS, SPACK_LDLIBS
+# The flags that needs to be stripped are in these variables:
+#   SPACK_STRIP_LDFLAGS
 # Debug env var is optional; set to "TRUE" for debug logging:
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
@@ -68,6 +69,7 @@ IFS=' ' read -ra SPACK_CPPFLAGS <<< "$SPACK_CPPFLAGS"
 IFS=' ' read -ra SPACK_CFLAGS   <<< "$SPACK_CFLAGS"
 IFS=' ' read -ra SPACK_CXXFLAGS <<< "$SPACK_CXXFLAGS"
 IFS=' ' read -ra SPACK_LDFLAGS  <<< "$SPACK_LDFLAGS"
+IFS=' ' read -ra SPACK_STRIP_LDFLAGS  <<< "$SPACK_STRIP_LDFLAGS"
 IFS=' ' read -ra SPACK_LDLIBS   <<< "$SPACK_LDLIBS"
 
 # test whether a path is a system directory
@@ -171,18 +173,6 @@ if [[ -z $mode ]]; then
     done
 fi
 
-# This is needed to ensure we set RPATH instead of RUNPATH
-# (or the opposite, depending on the configuration in config.yaml)
-#
-# http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
-# https://wiki.debian.org/RpathIssue
-#
-# The only discussion I could find on enabling new dynamic tags by
-# default on ld is the following:
-#
-# https://sourceware.org/ml/binutils/2013-01/msg00307.html
-#
-dtags_to_disable="${SPACK_DTAGS_TO_DISABLE}"
 linker_arg="${SPACK_LINKER_ARG}"
 
 # Set up rpath variable according to language.
@@ -311,7 +301,7 @@ while [ -n "$1" ]; do
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
                 rp="${arg#-Wl,}"
-            elif [[ "$arg" = "$dtags_to_disable" ]] ; then
+            elif [[ " ${SPACK_STRIP_LDFLAGS[@]} " =~ " $arg " ]] ; then
                 :  # We want to remove explicitly this flag
             else
                 other_args+=("-Wl,$arg")
@@ -344,7 +334,7 @@ while [ -n "$1" ]; do
             fi
             ;;
         *)
-            if [[ "$1" = "$dtags_to_disable" ]] ; then
+            if [[ " ${SPACK_STRIP_LDFLAGS[@]} " =~ " $1 " ]] ; then
                 :  # We want to remove explicitly this flag
             else
                 other_args+=("$1")

@@ -196,12 +196,6 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
     env.set('SPACK_LINKER_ARG', compiler.linker_arg)
 
-    # Check whether we want to force RPATH or RUNPATH
-    if spack.config.get('config:shared_linking') == 'rpath':
-        env.set('SPACK_DTAGS_TO_DISABLE', compiler.enable_new_dtags)
-    else:
-        env.set('SPACK_DTAGS_TO_DISABLE', compiler.disable_new_dtags)
-
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
     inject_flags = {}
@@ -228,8 +222,10 @@ def set_compiler_environment_variables(pkg, env):
     # Inject flags to use either RPATH or RUNPATH for ELF binaries
     if spack.config.get('config:shared_linking') == 'rpath':
         inject_flags['ldflags'].append(compiler.disable_new_dtags)
+        env.set('SPACK_STRIP_LDFLAGS', compiler.enable_new_dtags)
     else:
         inject_flags['ldflags'].append(compiler.enable_new_dtags)
+        env.set('SPACK_STRIP_LDFLAGS', compiler.disable_new_dtags)
 
     # Place compiler flags as specified by flag_handler
     for flag in spack.spec.FlagMap.valid_compiler_flags():

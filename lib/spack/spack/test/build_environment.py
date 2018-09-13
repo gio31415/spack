@@ -217,3 +217,34 @@ def test_spack_paths_before_module_paths(config, mock_packages, monkeypatch):
     paths = os.environ['PATH'].split(':')
 
     assert paths.index(spack_path) < paths.index(module_path)
+
+
+@pytest.mark.regression('9160')
+def test_dtags_in_build_environment(config, mock_packages, monkeypatch):
+    # Test the default configuration, that sets RPATH
+    pkg = spack.spec.Spec('cmake').concretized().package
+    spack.build_environment.setup_package(pkg, False)
+
+    assert 'SPACK_LDFLAGS' in os.environ
+    assert 'SPACK_STRIP_LDFLAGS' in os.environ
+    assert '--disable-new-dtags' in os.environ['SPACK_LDFLAGS']
+    assert '--enable-new-dtags' in os.environ['SPACK_STRIP_LDFLAGS']
+
+    old_get = spack.config.get
+
+    def _mock_get(request):
+        if request == 'config:shared_linking':
+            return 'runpath'
+        return old_get(request)
+
+    # Now use the mock function, that sets RUNPATH
+    monkeypatch.setattr(spack.config, 'get', _mock_get)
+    del os.environ['SPACK_LDFLAGS']
+    del os.environ['SPACK_STRIP_LDFLAGS']
+
+    spack.build_environment.setup_package(pkg, False)
+
+    assert 'SPACK_LDFLAGS' in os.environ
+    assert 'SPACK_STRIP_LDFLAGS' in os.environ
+    assert '--enable-new-dtags' in os.environ['SPACK_LDFLAGS']
+    assert '--disable-new-dtags' in os.environ['SPACK_STRIP_LDFLAGS']
