@@ -31,6 +31,7 @@ class Dftfe(CMakePackage):
     homepage = "https://sites.google.com/umich.edu/dftfe/"
     url      = "https://github.com/dftfeDevelopers/dftfe/archive/0.5.1.tar.gz"
 
+    version('0.6.0', '59571e9b459e18e774e9c7942f90d1c2')
     version('0.5.1', '17a4b5a979fff62d7f4d5c53e0c6c229')
     version('0.5.0', 'c7bd9153912dc49e4bbdf58522bf08d8')
 
@@ -75,6 +76,7 @@ class Dftfe(CMakePackage):
 
         return args
 
+    @when('@:0.5.1')
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.lib64)
