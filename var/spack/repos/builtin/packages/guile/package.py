@@ -62,7 +62,7 @@ class Guile(AutotoolsPackage):
             '--with-libgmp-prefix={0}'.format(spec['gmp'].prefix),
             '--with-libintl-prefix={0}'.format(spec['gettext'].prefix),
         ]
-        config_args += self.enable_or_disable('threads')
+        config_args += self.with_or_without('threads')
 
         if '+readline' in spec:
             config_args.append('--with-libreadline-prefix={0}'.format(
