@@ -27,7 +27,7 @@ from spack import *
 
 
 class Homer(MakefilePackage):
-    """	HOMER (Hypergeometric Optimization of Motif EnRichment) is a suite of 
+    """	HOMER (Hypergeometric Optimization of Motif EnRichment) is a suite of
         tools for Motif Discovery and next-gen sequencing analysis."""
 
     homepage = "http://homer.ucsd.edu/homer"
@@ -49,4 +49,4 @@ class Homer(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree(join_path(self.stage.source_path, 'bin'),
-                self.prefix.bin)
+                    self.prefix.bin)
