@@ -49,4 +49,4 @@ class Homer(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree(join_path(self.stage.source_path, 'bin'),
-                    self.prefix.bin)
+                     self.prefix.bin)
