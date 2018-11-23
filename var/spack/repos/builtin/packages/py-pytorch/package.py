@@ -32,7 +32,9 @@ class PyPytorch(PythonPackage):
     homepage = "http://pytorch.org/"
     url      = "https://github.com/pytorch/pytorch/archive/v0.3.1.tar.gz"
 
-    version('0.4.0', git='https://github.com/pytorch/pytorch.git',
+    version('0.4.1', git='https://github.com/pytorch/pytorch.git',
+            tag='v0.4.1', submodules=True)
+     version('0.4.0', git='https://github.com/pytorch/pytorch.git',
             tag='v0.4.0', submodules=True)
     version('0.3.1', git='https://github.com/pytorch/pytorch.git',
             tag='v0.3.1', submodules=True)
