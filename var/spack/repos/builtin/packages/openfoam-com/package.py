@@ -62,6 +62,7 @@ import glob
 import re
 import shutil
 import os
+import platform as py_platform
 
 from spack import *
 from spack.environment import EnvironmentModifications
@@ -757,8 +758,8 @@ class OpenfoamArch(object):
         # spec.architecture.platform is like `uname -s`, but lower-case
         platform = spec.architecture.platform
 
-        # spec.architecture.target is like `uname -m`
-        target   = spec.architecture.target
+        # do not use spec.architecture.target it fails if SPACK_TARGET_TYPE is set
+        target   = py_platform.machine()
 
         if platform == 'linux':
             if target == 'i686':
